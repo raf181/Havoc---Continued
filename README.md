@@ -215,6 +215,25 @@ chmod 600 profiles/havoc.yaotl data/havoc.yaotl
 
 If runtime files are already root-owned, an administrator should return only the affected files to the dedicated lab account. Never use `chmod -R 777`.
 
+#### Guarded automated setup
+
+The repository includes a safety-gated setup helper. It generates unique local credentials, creates a private classroom profile, validates the bundled toolchain, backs up prior state when requested, and can start the Teamserver. It refuses root execution, the default-route interface, and non-RFC1918 addresses.
+
+First add a dedicated VMware host-only adapter to Kali and identify its interface with `ip -br -4 addr`. Then run:
+
+```bash
+cd ~/Havoc
+./scripts/setup-classroom-lab.sh \
+  --accept-classroom-policy \
+  --interface eth1 \
+  --fresh-state \
+  --start-server
+```
+
+Replace `eth1` with the actual dedicated host-only interface. Generated credentials are stored in `data/classroom-credentials.txt` with mode `600`; the generated profile is `profiles/classroom.generated.yaotl` and is excluded from Git.
+
+The helper does not create listeners or agents, deliver artifacts, or change Windows security controls. Those boundaries are intentional.
+
 ### 2. Configure the classroom profile
 
 Review `profiles/havoc.yaotl` before class:

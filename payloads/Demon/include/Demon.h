@@ -113,7 +113,7 @@ typedef struct
 #endif
 
 #ifdef TRANSPORT_SMB
-            LPSTR   Name;   /* TODO: change type to BUFFER */
+            LPWSTR   Name;   /* TODO: change type to BUFFER */
             HANDLE  Handle;
 #endif
         } Transport;

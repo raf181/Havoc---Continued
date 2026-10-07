@@ -27,6 +27,9 @@ havoc
 # ignore data directory
 data/
 
+# ignore generated classroom secrets
+profiles/classroom.generated.yaotl
+
 # ignore client directories
 client/Build/
 client/Havoc

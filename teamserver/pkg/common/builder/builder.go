@@ -182,20 +182,24 @@ func NewBuilder(config BuilderConfig) *Builder {
 		// debug mode includes symbols
 		builder.compilerOptions.CFlags = []string{
 			"",
-			"-Os -fno-asynchronous-unwind-tables -masm=intel",
+			"-Os -fno-asynchronous-unwind-tables -masm=intel -std=c11",
 			"-fno-ident -fpack-struct=8 -falign-functions=1",
 			"-ffunction-sections -fdata-sections -falign-jumps=1 -w",
 			"-falign-labels=1 -fPIC",
 			"-Wl,--no-seh,--enable-stdcall-fixup,--gc-sections",
+			"-Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-function-declaration -Wno-error=strict-prototypes -std=c11",
+			"-Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-function-declaration -Wno-error=strict-prototypes",
 		}
 	} else {
 		builder.compilerOptions.CFlags = []string{
 			"",
-			"-Os -fno-asynchronous-unwind-tables -masm=intel",
+			"-Os -fno-asynchronous-unwind-tables -masm=intel -std=c11",
 			"-fno-ident -fpack-struct=8 -falign-functions=1",
 			"-s -ffunction-sections -fdata-sections -falign-jumps=1 -w",
 			"-falign-labels=1 -fPIC",
 			"-Wl,-s,--no-seh,--enable-stdcall-fixup,--gc-sections",
+			"-Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-function-declaration -Wno-error=strict-prototypes -std=c11",
+			"-Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-function-declaration -Wno-error=strict-prototypes",
 		}
 	}
 

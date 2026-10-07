@@ -4,14 +4,20 @@
 #include <Demon.h>
 
 #define MemCopy         __builtin_memcpy
-#define MemSet          __stosb
-#define MemZero( p, l ) __stosb( p, 0, l )
+#define MemSet( p, c, l ) __stosb( (unsigned char*)(p), c, l )
+#define MemZero( p, l )   __stosb( (unsigned char*)(p), 0, l )
 #define NO_INLINE       __attribute__ ((noinline))
 
 INT     StringCompareA( LPCSTR String1, LPCSTR String2 );
 INT     StringCompareW( LPWSTR String1, LPWSTR String2 );
+INT     StringCompareIW( LPWSTR String1, LPWSTR String2 );
 INT     StringNCompareW( LPWSTR String1, LPWSTR String2, INT Length );
+INT     StringCompareIW( LPWSTR String1, LPWSTR String2 );
+BOOL    EndsWithIW( LPWSTR String, LPWSTR Ending );
+INT     StringCompareIW( LPWSTR String1, LPWSTR String2 );
+BOOL    EndsWithIW( LPWSTR String, LPWSTR Ending );
 INT     StringNCompareIW( LPWSTR String1, LPWSTR String2, INT Length );
+BOOL    EndsWithIW( LPWSTR String, LPWSTR Ending );
 PCHAR   StringCopyA( PCHAR String1, PCHAR String2 );
 PWCHAR  StringCopyW(PWCHAR String1, PWCHAR String2);
 SIZE_T  StringLengthA( LPCSTR String );

@@ -8,6 +8,13 @@
 #include <core/MiniStd.h>
 
 #include <ntstatus.h>
+BOOL GetTokenInfo( HANDLE hToken, PDWORD TokenType, PDWORD Integrity, PDWORD ImpersonationLevel, PBUFFER UserDomain );
+BOOL IsNotCurrentUser( BOOL DoCheck, PBUFFER UserA, PBUFFER UserB );
+BOOL GetTokenInfo( HANDLE hToken, PDWORD TokenType, PDWORD Integrity, PDWORD ImpersonationLevel, PBUFFER UserDomain );
+BOOL IsNotCurrentUser( BOOL DoCheck, PBUFFER UserA, PBUFFER UserB );
+
+BOOL GetTokenInfo( HANDLE hToken, PDWORD TokenType, PDWORD Integrity, PDWORD ImpersonationLevel, PBUFFER UserDomain );
+BOOL IsNotCurrentUser( BOOL DoCheck, PBUFFER UserA, PBUFFER UserB );
 
 /* TODO: Change the way new tokens gets added.
  *

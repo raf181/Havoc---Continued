@@ -54,9 +54,7 @@ VOID SysSetConfig(
     IN PSYS_CONFIG Config
 );
 
-NTSTATUS SysInvoke(
-    _Inout_ /* Args... */
-);
+NTSTATUS SysInvoke();
 
 BOOL IsWoW64();
 

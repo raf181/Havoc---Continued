@@ -10,6 +10,7 @@ readonly PROFILE_TEMPLATE="${REPO_ROOT}/profiles/havoc.yaotl"
 readonly PROFILE_OUTPUT="${REPO_ROOT}/profiles/classroom.generated.yaotl"
 readonly CREDENTIAL_FILE="${REPO_ROOT}/data/classroom-credentials.txt"
 readonly BACKUP_DIR="${REPO_ROOT}/data/classroom-backups"
+readonly CLASSROOM_NETWORK="22.44.77.0/24"
 
 LAB_INTERFACE=""
 ACCEPT_POLICY=false
@@ -23,7 +24,7 @@ Usage:
 
 Required:
   --accept-classroom-policy  Confirm use is limited to the authorized classroom VMs.
-  --interface INTERFACE      Dedicated VMware host-only interface to validate.
+  --interface INTERFACE      VMware host-only interface with a 22.44.77.* address.
 
 Options:
   --fresh-state              Back up the existing Teamserver database before setup.
@@ -33,6 +34,10 @@ Options:
 This script configures only the defensive classroom environment. It does not
 generate or deliver agents, create listeners, disable security controls, or
 automate post-exploitation.
+
+The accepted classroom network is exactly 22.44.77.0/24. This is public
+address space and must never be bridged, routed, NATed, or forwarded outside
+the isolated VMware host-only segment.
 EOF
 }
 
@@ -43,6 +48,10 @@ fail() {
 
 info() {
     printf '[INFO] %s\n' "$*"
+}
+
+warn() {
+    printf '[WARNING] %s\n' "$*" >&2
 }
 
 require_command() {
@@ -101,23 +110,18 @@ LAB_IP="$(ip -o -4 addr show dev "${LAB_INTERFACE}" scope global | awk 'NR == 1 
 
 DEFAULT_INTERFACE="$(ip -4 route show default | awk 'NR == 1 { print $5 }')"
 if [[ -n "${DEFAULT_INTERFACE}" && "${LAB_INTERFACE}" == "${DEFAULT_INTERFACE}" ]]; then
-    fail "${LAB_INTERFACE} carries the default route. Add a separate VMware host-only adapter and use that interface"
+    warn "${LAB_INTERFACE} carries the default route. Confirm in VMware that it is host-only and has no Internet forwarding"
 fi
 
-python3 - "${LAB_IP}" <<'PY'
+python3 - "${LAB_IP}" "${CLASSROOM_NETWORK}" <<'PY'
 import ipaddress
 import sys
 
 address = ipaddress.ip_address(sys.argv[1])
-private_networks = (
-    ipaddress.ip_network("10.0.0.0/8"),
-    ipaddress.ip_network("172.16.0.0/12"),
-    ipaddress.ip_network("192.168.0.0/16"),
-)
-if not any(address in network for network in private_networks):
+network = ipaddress.ip_network(sys.argv[2])
+if address not in network or address in (network.network_address, network.broadcast_address):
     raise SystemExit(
-        f"[ERROR] {address} is not an RFC1918 classroom address. "
-        "Configure the VMware host-only network with a private subnet."
+        f"[ERROR] {address} is outside the required classroom network {network}."
     )
 PY
 
@@ -211,6 +215,7 @@ chmod 700 "${REPO_ROOT}/data/loot" "${BACKUP_DIR}"
 info "Classroom profile: ${PROFILE_OUTPUT}"
 info "Instructor credentials: ${CREDENTIAL_FILE}"
 info "Validated host-only address: ${LAB_IP} (${LAB_INTERFACE})"
+warn "22.44.77.0/24 is public address space. Keep this adapter strictly host-only and never bridge or forward it"
 info "No listener or agent was created"
 
 if [[ "${START_SERVER}" == true ]]; then

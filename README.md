@@ -1,183 +1,130 @@
-# Defensive CTI Classroom Edition
+# Havoc — Laboratorio defensivo de CTI para el aula
 
 > [!CAUTION]
-> **Classroom authorization only.** This repository may be used only for instructor-led CTI, detection-engineering, incident-response, and malware-analysis exercises on explicitly named lab virtual machines. Any use outside the written class scope—including use on public networks, production systems, third-party systems, or devices without the owner's explicit permission—is prohibited and is not authorized by the instructor or repository maintainer.
+> **Uso autorizado únicamente en el aula.** Este repositorio solo puede utilizarse en ejercicios dirigidos por un instructor sobre inteligencia de amenazas (CTI), ingeniería de detección, respuesta ante incidentes y análisis de malware, y exclusivamente en las máquinas virtuales de laboratorio identificadas de forma expresa. Cualquier uso fuera del alcance escrito de la clase —incluidos sistemas de producción, redes públicas, sistemas de terceros o dispositivos sin permiso explícito de su propietario— queda prohibido y no está autorizado por el instructor ni por el responsable del repositorio.
 
 > [!WARNING]
-> Havoc contains command-and-control, process-injection, token, and defense-evasion capabilities. Treat generated artifacts as malware. Never expose the Teamserver or a listener to the Internet, and never move artifacts to personal or production devices.
+> Havoc es un framework de mando y control que contiene funciones de posexplotación, inyección de procesos, manipulación de tokens y evasión de defensas. Todos los artefactos generados deben tratarse como malware. No los subas a servicios públicos de análisis, no los copies a dispositivos personales y no expongas el Teamserver ni ningún listener a Internet.
+
+Este fork está destinado a enseñar cómo reconocer, investigar y documentar actividad de mando y control en Windows mediante un SIEM, Microsoft Defender, Sysmon, los registros de eventos de Windows, telemetría de red y herramientas forenses. No es una guía para realizar operaciones fuera de un laboratorio aislado y autorizado.
 
 <div align="center">
   <img width="125px" src="assets/Havoc.png" />
   <h1>Havoc</h1>
-  <br/>
-
-  <p><i>Havoc is a modern and malleable post-exploitation command and control framework, created by <a href="https://twitter.com/C5pider">@C5pider</a>.</i></p>
-  <br />
-
+  <p><i>Havoc fue creado originalmente por <a href="https://twitter.com/C5pider">@C5pider</a>. Este fork añade documentación y controles para su uso defensivo en el aula.</i></p>
   <img src="assets/Screenshots/FullSessionGraph.jpeg" width="90%" /><br />
   <img src="assets/Screenshots/MultiUserAgentControl.png" width="90%" /><br />
-  
 </div>
 
-### Quick Start
+## Alcance y autorización
 
-> For this fork, use the **Defensive classroom lab guide** below. The upstream wiki is reference material only and does not override this repository's classroom scope or safety controls.
+Antes de comenzar, el instructor debe documentar:
 
-This checkout uses a version-matched bundled MinGW toolchain. A newer system compiler is not necessarily compatible. Validate the specific classroom snapshot and toolchain before class rather than upgrading components during an exercise.
+- Los instructores y alumnos autorizados.
+- Las máquinas virtuales exactas de Kali, Windows y SIEM incluidas en el ejercicio.
+- La fecha y las horas de inicio y finalización.
+- La subred host-only de VMware y los puertos permitidos.
+- Las acciones permitidas y las expresamente prohibidas.
+- El procedimiento de conservación, acceso y eliminación de evidencias.
+- El mecanismo para detener inmediatamente el ejercicio si se supera el alcance.
 
-The upstream [Installation](https://havocframework.com/docs/installation) and [Known Issues](https://github.com/HavocFramework/Havoc/wiki#known-issues) pages may help with compatibility research, but do not follow any step that expands the written lab scope.
+Queda prohibido:
 
----
+- Usar adaptadores en modo puente, listeners expuestos a Internet, reenvío de puertos o destinos públicos o en la nube.
+- Actuar contra cualquier sistema no incluido expresamente en la autorización escrita.
+- Introducir credenciales reales, datos personales o información de producción en el laboratorio.
+- Realizar volcado de credenciales, robo de tokens, persistencia, movimiento lateral, escalada de privilegios o recogida de datos.
+- Desactivar o eludir Defender, AMSI, ETW, EDR, Sysmon, el registro de eventos u otros controles de seguridad.
+- Distribuir artefactos mediante correo, sitios web, unidades compartidas, dispositivos extraíbles o servicios de terceros.
 
-### Features
+La autorización debe proceder del propietario del sistema. Este aviso no sustituye el consentimiento ni la legislación aplicable.
 
-#### Client
+## Arquitectura del laboratorio
 
-> Cross-platform UI written in C++ and Qt
-
-- Modern, dark theme based on [Dracula](https://draculatheme.com/)
-
-
-#### Teamserver
-
-> Written in Golang
-
-- Multiplayer
-- Payload generation (exe/shellcode/dll)
-- HTTP/HTTPS listeners
-- Customizable C2 profiles 
-- External C2
-
-#### Demon
-
-> Havoc's flagship agent written in C and ASM
-
-- Sleep Obfuscation via [Ekko](https://github.com/Cracked5pider/Ekko), Ziliean or [FOLIAGE](https://github.com/SecIdiot/FOLIAGE)
-- x64 return address spoofing
-- Indirect Syscalls for Nt* APIs
-- SMB support
-- Token vault
-- Variety of built-in post-exploitation commands
-- Patching Amsi/Etw via Hardware breakpoints
-- Proxy library loading
-- Stack duplication during sleep. 
-
-<div align="center">
-  <img src="assets/Screenshots/SessionConsoleHelp.png" width="90%" /><br />
-</div>
-
-#### Extensibility
-
-- [External C2](https://github.com/HavocFramework/Havoc/wiki#external-c2)
-- Custom Agent Support
-  - [Talon](https://github.com/HavocFramework/Talon)
-- [Python API](https://github.com/HavocFramework/havoc-py)
-- [Modules](https://github.com/HavocFramework/Modules)
-
----
-
-### Community
-
-You can join the official [Havoc Discord](https://discord.gg/z3PF3NRDE5) to chat with the community! 
-
-### Note
-
-Please do not open any issues regarding detection. 
-
-The Havoc Framework hasn't been developed to be evasive. Rather it has been designed to be as malleable & modular as possible. Giving the operator the capability to add custom features or modules that evades their targets detection system. 
-
----
-
-## Defensive classroom lab guide
-
-This guide covers safe lab preparation, Teamserver/client setup, Windows telemetry, SIEM validation, troubleshooting, and cleanup. It intentionally does **not** document agent generation or delivery, credential access, persistence, lateral movement, security-control bypasses, or post-exploitation.
-
-### Authorization and rules of engagement
-
-Before class, the instructor must record:
-
-- Authorized instructors and students.
-- The exact Kali, Windows, and SIEM VMs in scope.
-- The class start and end times.
-- The VMware host-only subnet and permitted ports.
-- Permitted exercises and prohibited actions.
-- Evidence handling, retention, and cleanup requirements.
-
-The following are prohibited:
-
-- Bridged networking, Internet-facing listeners, port forwarding, or public/cloud targets.
-- Use against any system not explicitly listed in the written authorization.
-- Real credentials, personal data, business data, or production accounts in the lab.
-- Credential dumping, token theft, persistence, lateral movement, privilege escalation, or data collection.
-- Disabling or bypassing Defender, AMSI, ETW, EDR, logging, or other security controls.
-- Delivery through email, websites, shared drives, removable media, or third-party services.
-
-Authorization must come from the system owner. This notice does not replace consent or applicable law.
-
-### Recommended architecture
+Utiliza al menos dos máquinas virtuales aisladas y, preferiblemente, una tercera máquina para el SIEM:
 
 ```text
-VMware host-only network — no bridge and no port forwarding
+Red host-only de VMware — sin puente y sin reenvío de puertos
 
-Kali instructor VM                 Windows 11 student VM
-Teamserver + client                Defender + Sysmon + SIEM agent
-TCP 40056 management              Synthetic users and test data only
-TCP 8443 lab listener
+VM Kali del instructor             VM Windows 11 del alumno
+Teamserver + cliente               Defender + Sysmon + agente SIEM
+TCP 40056: administración          Usuarios y datos sintéticos
+TCP 8443: listener del aula
              \                    /
               \                  /
-                Optional SIEM VM
+                   VM SIEM opcional
 ```
 
-Safety controls:
+Controles recomendados:
 
-- Use VMware **Host-only** networking only.
-- Disable shared folders, drag-and-drop, and shared clipboard while handling artifacts.
-- Take clean snapshots before every class.
-- Keep host firewalls and Windows security controls enabled.
-- Use a nonprivileged listener port such as `8443`.
-- Revert the Windows VM after every exercise.
+- Usa exclusivamente una red **host-only** de VMware.
+- Desactiva carpetas compartidas, arrastrar y soltar y el portapapeles compartido mientras se manipulen artefactos.
+- Crea instantáneas limpias antes de cada clase.
+- Mantén activos los cortafuegos y los controles de seguridad de Windows.
+- Utiliza un puerto no privilegiado, como `8443`, para el listener.
+- Revierte Windows a una instantánea limpia después de cada ejercicio.
+- No configures NAT, bridge, routing ni port forwarding para la red del laboratorio.
 
-### Kali prerequisites
+## Red obligatoria del aula
 
-This checkout expects:
+El script de preparación acepta únicamente direcciones pertenecientes a:
 
-- Repository path: `~/Havoc` (or another instructor-controlled directory).
-- Executables: `havoc` and `client/Havoc`.
-- `nasm` and the bundled MinGW compilers below `data/`.
-- A Kali host-only IPv4 address reachable from Windows.
+```text
+22.44.77.0/24
+```
 
-Validate the environment:
+Esto comprende las direcciones utilizables `22.44.77.1` a `22.44.77.254`.
+
+> [!IMPORTANT]
+> `22.44.77.0/24` es espacio de direccionamiento público, no una subred privada RFC1918. Debe permanecer estrictamente aislada dentro de una red host-only de VMware, sin puente, NAT, reenvío ni ruta hacia redes externas.
+
+Comprueba la interfaz de Kali antes de empezar:
+
+```bash
+ip -br -4 addr
+ip -4 route
+```
+
+## Requisitos de Kali
+
+Este checkout presupone:
+
+- Repositorio en `~/Havoc` o en otro directorio controlado por el instructor.
+- Ejecutables `havoc` y `client/Havoc`.
+- `nasm` y los compiladores MinGW incluidos dentro de `data/`.
+- Una dirección `22.44.77.*` asignada a la interfaz host-only.
+
+Validación básica:
 
 ```bash
 cd ~/Havoc
-ip -br -4 addr
 ./havoc --help
 test -x data/x86_64-w64-mingw32-cross/bin/x86_64-w64-mingw32-gcc
 test -x data/i686-w64-mingw32-cross/bin/i686-w64-mingw32-gcc
 ```
 
-VMware DHCP addresses may change after a reboot or snapshot restore. Never reuse a bind address without checking it first.
+Las direcciones asignadas por VMware pueden cambiar tras reiniciar o restaurar una instantánea. Verifica siempre la dirección antes de configurar el listener.
 
-### Windows 11 telemetry prerequisites
+## Requisitos de telemetría en Windows 11
 
-Keep security controls enabled and collect at least:
+Mantén activos los controles de seguridad y recoge, como mínimo:
 
-- Microsoft Defender Antivirus operational events.
-- Windows Security logs, including process creation where configured.
-- PowerShell operational and script-block logs.
-- Sysmon process, network, image-load, process-access, file, registry, and DNS events selected by an instructor-reviewed configuration.
-- SIEM/log-forwarder health events.
+- Eventos operativos de Microsoft Defender Antivirus.
+- Registro de Seguridad de Windows, incluida la creación de procesos cuando esté configurada.
+- Registros operativos de PowerShell y Script Block Logging.
+- Eventos de Sysmon para procesos, conexiones de red, carga de imágenes, acceso a procesos, ficheros, registro y DNS según una configuración revisada por el instructor.
+- Eventos de estado del agente del SIEM o del reenviador de registros.
 
-Official references:
+Referencias oficiales:
 
 - [Microsoft Sysmon](https://learn.microsoft.com/sysinternals/downloads/sysmon)
-- [PowerShell logging on Windows](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows)
-- [Windows security auditing](https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing-faq)
-- [Microsoft Defender Antivirus events](https://learn.microsoft.com/defender-endpoint/troubleshoot-microsoft-defender-antivirus)
+- [Registro de PowerShell en Windows](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_logging_windows)
+- [Auditoría de seguridad de Windows](https://learn.microsoft.com/windows/security/threat-protection/auditing/advanced-security-auditing-faq)
+- [Eventos de Microsoft Defender Antivirus](https://learn.microsoft.com/defender-endpoint/troubleshoot-microsoft-defender-antivirus)
 
-Do not blindly install a Sysmon configuration copied from the Internet. Review its coverage, privacy impact, and expected event volume first.
+No instales sin revisar una configuración de Sysmon obtenida de Internet. Evalúa primero su cobertura, impacto sobre la privacidad y volumen esperado.
 
-Verify the sensors from an elevated PowerShell window on the Windows lab VM:
+Comprueba los sensores desde una consola elevada de PowerShell:
 
 ```powershell
 Get-MpComputerStatus | Select-Object AntivirusEnabled, RealTimeProtectionEnabled
@@ -187,23 +134,61 @@ Get-WinEvent -LogName 'Microsoft-Windows-PowerShell/Operational' -MaxEvents 5
 auditpol.exe /get /subcategory:'Process Creation'
 ```
 
-Resolve missing logs or unhealthy sensors before introducing any simulation activity.
+Resuelve cualquier sensor inactivo o registro ausente antes de iniciar la simulación.
 
-### SIEM prerequisites
+## Requisitos del SIEM
 
-The class can use Microsoft Sentinel, Splunk, Elastic, Security Onion, or another approved SIEM. Before any simulation, verify ingestion of:
+El laboratorio es independiente del SIEM. Puede utilizarse Microsoft Sentinel, Splunk, Elastic, Security Onion u otra plataforma aprobada. Antes del ejercicio, verifica la recepción de:
 
-- Windows Security events.
+- Eventos de Seguridad de Windows.
 - `Microsoft-Windows-Sysmon/Operational`.
 - `Microsoft-Windows-PowerShell/Operational`.
-- Microsoft Defender operational events.
-- DNS, firewall, proxy, or packet metadata for the host-only subnet, if available.
+- Eventos operativos de Microsoft Defender.
+- Metadatos DNS, de cortafuegos, proxy o red para el segmento host-only, si están disponibles.
 
-Record normal ingestion latency so delayed events are not mistaken for missing detections.
+Registra la latencia normal de ingesta para que un retraso no se confunda con una detección fallida.
 
-### 1. Secure permissions
+## Preparación automática protegida
 
-Run Havoc as the normal `anoam` account. Do not use `sudo`; it creates root-owned databases and evidence directories.
+El repositorio incluye [scripts/setup-classroom-lab.sh](scripts/setup-classroom-lab.sh). El script:
+
+- Rechaza la ejecución como `root`.
+- Solo acepta una interfaz con dirección `22.44.77.*`.
+- Advierte si la interfaz también contiene la ruta predeterminada.
+- Verifica binarios, herramientas y compiladores incluidos.
+- Genera credenciales únicas.
+- Crea un perfil privado específico para el aula.
+- Protege credenciales, claves, base de datos y evidencias mediante permisos restrictivos.
+- Puede respaldar el estado anterior.
+- Puede iniciar el Teamserver al finalizar.
+- No crea listeners ni agentes y no automatiza entrega, evasión o posexplotación.
+
+Uso:
+
+```bash
+cd ~/Havoc
+./scripts/setup-classroom-lab.sh \
+  --accept-classroom-policy \
+  --interface eth0 \
+  --fresh-state \
+  --start-server
+```
+
+Sustituye `eth0` si la dirección `22.44.77.*` pertenece a otra interfaz.
+
+El script genera:
+
+- Perfil: `profiles/classroom.generated.yaotl`.
+- Credenciales: `data/classroom-credentials.txt`.
+- Copias de seguridad: `data/classroom-backups/`.
+
+El perfil generado y el directorio `data/` están excluidos de Git. No publiques las credenciales ni las evidencias.
+
+## Preparación manual
+
+### 1. Permisos
+
+Ejecuta Havoc con la cuenta normal del laboratorio. No uses `sudo`, porque crearía bases de datos y evidencias propiedad de `root`.
 
 ```bash
 cd ~/Havoc
@@ -213,205 +198,227 @@ chmod 644 data/server.cert
 chmod 600 profiles/havoc.yaotl data/havoc.yaotl
 ```
 
-If runtime files are already root-owned, an administrator should return only the affected files to the dedicated lab account. Never use `chmod -R 777`.
+Si ya existen archivos propiedad de `root`, un administrador debe devolver únicamente esos archivos a la cuenta del laboratorio. No uses `chmod -R 777`.
 
-#### Guarded automated setup
+### 2. Perfil del aula
 
-The repository includes a safety-gated setup helper. It generates unique local credentials, creates a private classroom profile, validates the bundled toolchain, backs up prior state when requested, and can start the Teamserver. It refuses root execution, the default-route interface, and non-RFC1918 addresses.
+Revisa `profiles/havoc.yaotl`:
 
-First add a dedicated VMware host-only adapter to Kali and identify its interface with `ip -br -4 addr`. Then run:
+- Sustituye todas las contraseñas de ejemplo.
+- Mantén la administración del Teamserver en el puerto privado `40056`, salvo que el diseño indique otro.
+- Guarda las credenciales en el almacén aprobado por el instructor.
+- Confirma que el perfil utiliza los compiladores incluidos bajo `data/`.
 
-```bash
-cd ~/Havoc
-./scripts/setup-classroom-lab.sh \
-  --accept-classroom-policy \
-  --interface eth1 \
-  --fresh-state \
-  --start-server
-```
+No confirmes en Git contraseñas, claves privadas, bases de datos, evidencias ni artefactos generados.
 
-Replace `eth1` with the actual dedicated host-only interface. Generated credentials are stored in `data/classroom-credentials.txt` with mode `600`; the generated profile is `profiles/classroom.generated.yaotl` and is excluded from Git.
+### 3. Teamserver
 
-The helper does not create listeners or agents, deliver artifacts, or change Windows security controls. Those boundaries are intentional.
-
-### 2. Configure the classroom profile
-
-Review `profiles/havoc.yaotl` before class:
-
-- Replace every example operator and service password.
-- Keep Teamserver management on private port `40056` unless the lab design specifies another port.
-- Store credentials in the approved instructor secret store, not in slides or public commits.
-- Confirm the compiler paths refer to the bundled toolchains under `data/`.
-
-Never commit classroom passwords, private keys, Teamserver databases, loot, or generated artifacts.
-
-### 3. Start the Teamserver
-
-Havoc resolves profiles, databases, payload directories, and logs from its working directory, so always start it from the repository root:
+Havoc resuelve perfiles, bases de datos, payloads y registros a partir del directorio de trabajo. Inícialo siempre desde la raíz:
 
 ```bash
 cd ~/Havoc
 ./havoc server --profile profiles/havoc.yaotl --verbose
 ```
 
-Expected output includes:
+La salida esperada incluye:
 
 ```text
 Starting Teamserver on wss://0.0.0.0:40056
 Teamserver logs saved under: data/loot/...
 ```
 
-Do not use `./havoc server -d` for this classroom checkout. That option loads `data/havoc.yaotl`, which may select an incompatible system MinGW version instead of the bundled compiler.
+No utilices `./havoc server -d` en este checkout. Esa opción carga `data/havoc.yaotl` y puede seleccionar una versión incompatible del compilador MinGW del sistema.
 
-### 4. Start and connect the client
+### 4. Cliente
 
-In a separate terminal:
+En otra terminal:
 
 ```bash
 cd ~/Havoc
 ./havoc client
 ```
 
-Create a fresh connection using:
+Crea una conexión nueva con:
 
-- Host: `127.0.0.1` when the client is on the same Kali VM.
-- Port: `40056`.
-- Username and password: the values in `profiles/havoc.yaotl`.
+- Host: `127.0.0.1` si el cliente se ejecuta en la misma VM Kali.
+- Puerto: `40056`.
+- Usuario y contraseña: los valores del perfil utilizado por el Teamserver.
 
-The client pre-fills an example password of `password`; it is not synchronized with the Teamserver profile. Replace it. Continue only after the server logs a successful operator authentication.
+El cliente rellena inicialmente una contraseña de ejemplo, `password`, que no se sincroniza con el perfil. Sustitúyela. No continúes hasta que el Teamserver indique que el operador se ha autenticado correctamente.
 
-### 5. Create an isolated classroom listener
+### 5. Listener aislado
 
-From an authenticated client, create a uniquely named listener:
+Desde un cliente autenticado, crea un listener con un nombre único:
 
-- Bind host: Kali's current host-only IPv4 address.
-- Bind port: `8443` or another instructor-approved nonprivileged port.
-- Connection host: the same host-only IPv4 address.
-- Connection port: the same approved port.
-- Prefer the specific host-only address over `0.0.0.0`.
-- Never use a public, bridged, NAT-forwarded, or production address.
+- Bind host: la dirección actual `22.44.77.*` de Kali.
+- Bind port: `8443` u otro puerto no privilegiado aprobado.
+- Connection host: la misma dirección host-only.
+- Connection port: el mismo puerto aprobado.
+- No uses una dirección pública externa, puenteada, reenviada o de producción.
 
-Verify only the expected lab ports are listening:
+Comprueba los puertos locales:
 
 ```bash
 ss -ltnp | rg ':40056|:8443'
 ```
 
-### Detection-focused class workflow
+Este README no documenta generación o entrega de agentes, acceso a credenciales, persistencia, evasión ni posexplotación. Cualquier artefacto gestionado por el instructor debe permanecer dentro del laboratorio y ajustarse al plan escrito.
 
-#### Phase 1: Establish a baseline
+## Flujo de la clase defensiva
 
-Collect at least ten minutes of normal Windows activity before the exercise. Identify:
+### Fase 1: establecer una línea base
 
-- Normal parent/child process relationships.
-- Expected DNS resolvers and network destinations.
-- Typical PowerShell and command-shell activity.
-- Normal Defender and Sysmon volume.
-- SIEM ingestion latency and host identity fields.
+Recoge al menos diez minutos de actividad normal de Windows. Identifica:
 
-#### Phase 2: Observe authorized activity
+- Relaciones habituales entre procesos padre e hijo.
+- Resolutores DNS y destinos de red esperados.
+- Uso normal de PowerShell y del intérprete de comandos.
+- Volumen habitual de Defender y Sysmon.
+- Latencia de ingesta e identificadores del host en el SIEM.
 
-Only the instructor performs the separately approved simulation. Students monitor telemetry. Useful sources include:
+### Fase 2: observar la actividad autorizada
 
-| Data source | Events or behavior to review |
+Solo el instructor realiza la simulación aprobada. Los alumnos observan la telemetría.
+
+| Fuente | Eventos o comportamientos que revisar |
 | --- | --- |
-| Sysmon | Process creation (1), network connections (3), image loads (7), remote threads (8), process access (10), file creation (11), registry changes (12–14), DNS queries (22) |
-| Windows Security | Process creation (4688), logons (4624/4625), explicit credentials (4648), service installation (4697), where auditing is enabled |
-| PowerShell | Engine/provider events and script-block events such as 4104 |
-| Defender | Detection, remediation, configuration-change, and health events |
-| Network | Repeated connections, unusual TLS destinations, unexpected ports, and periodic timing |
+| Sysmon | Creación de procesos (1), conexiones de red (3), carga de imágenes (7), hilos remotos (8), acceso a procesos (10), creación de ficheros (11), registro (12–14) y DNS (22) |
+| Seguridad de Windows | Creación de procesos (4688), inicios de sesión (4624/4625), credenciales explícitas (4648) e instalación de servicios (4697), cuando la auditoría esté habilitada |
+| PowerShell | Eventos del motor y del proveedor, además de Script Block Logging, como 4104 |
+| Defender | Detección, corrección, cambios de configuración y estado |
+| Red | Conexiones repetidas, destinos TLS anómalos, puertos inesperados y periodicidad |
 
-Not every event appears on every system. Validate audit policy and sensor configuration before concluding that telemetry was bypassed.
+No todos los eventos aparecen en todos los equipos. Valida la política de auditoría y los sensores antes de concluir que falta telemetría.
 
-#### Phase 3: Build behavior-based detections
+### Fase 3: crear detecciones basadas en comportamiento
 
-Suggested defensive objectives:
+Objetivos recomendados:
 
-- Detect an unusual process making recurring outbound connections.
-- Identify unexpected parent/child process relationships.
-- Alert on access to another process with rights associated with memory inspection or injection.
-- Find unsigned or unusual modules loaded into a trusted process.
-- Identify PowerShell or shell usage inconsistent with the baseline.
-- Correlate a network event, process event, and Defender/Sysmon event on one host.
+- Detectar un proceso inusual con conexiones salientes recurrentes.
+- Identificar relaciones padre/hijo inesperadas.
+- Alertar del acceso a otro proceso con derechos asociados a inspección de memoria o inyección.
+- Localizar módulos no firmados o anómalos cargados en procesos de confianza.
+- Detectar PowerShell o shells cuyo uso se aparte de la línea base.
+- Correlacionar eventos de red, procesos y Defender o Sysmon en el mismo host.
 
-Every detection should document its data source, audit prerequisites, query logic, likely false positives, severity, response action, and validation evidence.
+Cada detección debe documentar:
 
-#### Phase 4: Investigate and report
+- Fuente y campos necesarios.
+- Política de auditoría requerida.
+- Lógica de consulta.
+- Posibles falsos positivos.
+- Severidad.
+- Acción de respuesta.
+- Evidencia de validación.
 
-Student reports should include:
+### Fase 4: investigar e informar
 
-1. The earliest relevant event.
-2. The process tree and command-line context.
-3. Available user, integrity, hash, signature, and path data.
-4. Network destinations and timing.
-5. Defender, Sysmon, and SIEM corroboration.
-6. A clear separation between observations and assumptions.
-7. Containment and recovery recommendations for a real environment.
+El informe del alumno debe incluir:
 
-Never submit live artifacts, private keys, credentials, or raw memory captures to public services.
+1. El primer evento relevante.
+2. El árbol de procesos y las líneas de comandos.
+3. Usuario, nivel de integridad, hashes, firmas y rutas disponibles.
+4. Destinos y tiempos de red.
+5. Corroboración entre Defender, Sysmon y SIEM.
+6. Separación clara entre hechos observados e hipótesis.
+7. Recomendaciones de contención y recuperación.
 
-### Troubleshooting
+No envíes artefactos, claves privadas, credenciales ni volcados de memoria a servicios públicos.
 
-#### Listener restores an old IP
+## Solución de problemas
 
-Listeners are persisted in `data/teamserver.db`. Delete or edit stale listeners through an authenticated client and recreate them with the current host-only address.
+### Se restaura un listener con una IP antigua
 
-For a new class with no state to preserve, stop the Teamserver and make a recoverable backup:
+Los listeners se guardan en `data/teamserver.db`. Elimina o edita el listener obsoleto desde un cliente autenticado y vuelve a crearlo con la dirección `22.44.77.*` actual.
+
+Para empezar una clase sin conservar el estado anterior, detén el Teamserver y crea una copia recuperable:
 
 ```bash
 mv data/teamserver.db data/teamserver.db.previous-class
 ```
 
-Restarting creates a clean database. Retain the backup only according to the evidence policy.
+Al reiniciar se creará una base de datos limpia.
 
-#### Client authentication fails
+### El cliente no se autentica
 
-- Ensure the client and server use the same profile credentials.
-- Credentials are case-sensitive.
-- Replace the client's pre-filled example password.
-- Do not administer listeners until the server logs successful authentication.
+- Confirma que el cliente y el servidor utilizan las credenciales del mismo perfil.
+- Las credenciales distinguen mayúsculas y minúsculas.
+- Sustituye la contraseña de ejemplo del cliente.
+- No administres listeners hasta ver el mensaje de autenticación correcta.
 
-#### `bind: cannot assign requested address`
+### `bind: cannot assign requested address`
 
-The listener references an address that Kali does not currently own. Check `ip -br -4 addr` and select the current host-only address. Do not expose the listener through a public or bridged interface.
+La dirección configurada no pertenece actualmente a Kali. Compruébala con:
 
-#### Permission errors or root-owned logs
+```bash
+ip -br -4 addr
+```
 
-Stop using `sudo`. Restore ownership only for affected runtime files and restrict the database, profiles, private key, and loot to the dedicated lab account.
+Selecciona la dirección `22.44.77.*` vigente. No resuelvas el problema exponiendo el listener mediante puente o reenvío.
 
-#### Compiler errors involving `__stosb`, pointer types, or `SysInvoke`
+### El puerto 40056 ya está ocupado
 
-The checkout and system MinGW version are incompatible. Use the explicit classroom profile and bundled compilers. Do not broadly suppress compiler diagnostics or copy patched binaries from untrusted sources.
+Localiza el proceso antes de iniciar otra instancia:
 
-#### Python `invalid escape sequence` warning
+```bash
+ss -ltnp | rg ':40056'
+pgrep -af 'havoc server'
+```
 
-Some optional client modules contain older Python string syntax. This warning is unrelated to Teamserver authentication or listener binding. Disable unnecessary modules rather than weakening system security.
+Detén de forma ordenada la instancia anterior. No ejecutes varios Teamservers contra la misma base de datos.
 
-### Cleanup after every class
+### Permisos o registros propiedad de root
 
-1. Stop the client and Teamserver.
-2. Confirm ports `40056` and `8443` are closed.
-3. Export only the logs authorized for the lesson.
-4. Store evidence in the approved location with access controls and retention dates.
-5. Rotate or remove temporary classroom credentials.
-6. Revert the Windows and artifact-handling VMs to clean snapshots.
-7. Confirm all VMware adapters remain host-only and no forwarding rules were added.
-8. Delete artifacts when the approved retention period ends.
+Deja de iniciar el servidor con `sudo`. Devuelve la propiedad únicamente a los ficheros afectados y restringe el acceso a la base de datos, los perfiles, la clave privada y las evidencias.
 
-### Instructor preflight checklist
+### Errores de compilación con `__stosb`, punteros o `SysInvoke`
 
-- [ ] Written authorization identifies participants, VMs, subnet, actions, and class times.
-- [ ] Clean snapshots exist and have been tested.
-- [ ] Networking is host-only, with no bridge or port forwarding.
-- [ ] Defender and required Windows logs remain enabled.
-- [ ] Sysmon and the SIEM agent are healthy.
-- [ ] Test events reach the SIEM before class.
-- [ ] Default passwords have been replaced.
-- [ ] Havoc runs as a non-root lab account.
-- [ ] The listener uses only the host-only address and approved port.
-- [ ] Students understand evidence handling and cleanup.
-- [ ] The instructor can terminate the exercise immediately if scope is exceeded.
+El checkout y la versión MinGW del sistema pueden ser incompatibles. Usa el perfil explícito del aula y los compiladores incluidos. No ocultes de forma general los diagnósticos ni copies binarios parcheados desde fuentes no fiables.
 
-### Upstream attribution
+### Aviso de Python `invalid escape sequence`
 
-Havoc was created by [C5pider](https://twitter.com/C5pider). Refer to the upstream licensing and notices for applicable terms. This classroom guide adds safety expectations for this lab; it does not grant permission to use systems you do not own or administer.
+Algunos módulos opcionales utilizan sintaxis antigua de cadenas de Python. El aviso no está relacionado con la autenticación ni con el listener. Desactiva módulos innecesarios en lugar de debilitar la seguridad del sistema.
+
+## Limpieza después de cada clase
+
+1. Detén el cliente y el Teamserver.
+2. Confirma que los puertos `40056` y `8443` están cerrados.
+3. Exporta únicamente los registros autorizados.
+4. Guarda las evidencias en la ubicación aprobada, con control de acceso y fecha de eliminación.
+5. Elimina o rota las credenciales temporales.
+6. Revierte Windows y las máquinas que manipularon artefactos a instantáneas limpias.
+7. Confirma que los adaptadores de VMware siguen siendo host-only y que no existen reglas de reenvío.
+8. Elimina los artefactos cuando termine el periodo de conservación.
+
+## Lista de comprobación del instructor
+
+- [ ] La autorización identifica participantes, VMs, subred, acciones y horario.
+- [ ] Existen instantáneas limpias y se han probado.
+- [ ] La red es host-only y no tiene bridge, NAT ni port forwarding.
+- [ ] Defender y los registros necesarios permanecen activos.
+- [ ] Sysmon y el agente SIEM están sanos.
+- [ ] Los eventos de prueba llegan al SIEM antes de la clase.
+- [ ] Se han sustituido las contraseñas de ejemplo.
+- [ ] Havoc se ejecuta con una cuenta sin privilegios.
+- [ ] Solo se utiliza la subred `22.44.77.0/24`.
+- [ ] El listener utiliza únicamente la dirección host-only y el puerto aprobado.
+- [ ] Los alumnos conocen las reglas de evidencias y limpieza.
+- [ ] El instructor puede detener inmediatamente el ejercicio.
+
+## Componentes del proyecto
+
+### Cliente
+
+Interfaz gráfica multiplataforma escrita en C++ y Qt.
+
+### Teamserver
+
+Servidor escrito en Go que coordina el cliente, el estado del laboratorio y los listeners autorizados.
+
+### Demon
+
+Agente original de Havoc escrito en C y ensamblador. Contiene capacidades de alto riesgo y debe tratarse como malware dentro del laboratorio.
+
+## Atribución
+
+Havoc fue creado por [C5pider](https://twitter.com/C5pider). Consulta la licencia y los avisos del proyecto original para conocer los términos aplicables. Esta documentación añade controles para el aula; no concede permiso para utilizar sistemas que no sean propios o que no estén administrados con autorización expresa.
